@@ -8,16 +8,17 @@ copyright:           "2018 Aditya Siram"
 build-type:          Custom
 extra-source-files:
 - README.md
-- ChangeLog.md
 data-files:
 - fonts/*.ttf
 - images/*.png
+extra-doc-files:
+- doc/images/*.png
 description:         Please see the README on Github at <https://github.com/deech/fltkhs-themes#readme>
 
 custom-setup:
   dependencies:
   - base >= 4.4
-  - Cabal >= 2.2.0.1 && < 3
+  - Cabal >= 2.2.0.0 && < 3
 
 library:
   source-dirs: src
@@ -28,7 +29,7 @@ library:
     - text >= 0.2 && < 1.3
     - vector >= 0.12.0.1
     - bytestring
-  ghc-options: -Wall
+  ghc-options: -Wall -fno-warn-name-shadowing
   when:
     - condition: os(linux)
       extra-libraries: fontconfig
