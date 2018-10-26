@@ -7,7 +7,7 @@ maintainer:          "aditya.siram@gmail.com"
 copyright:           "2018 Aditya Siram"
 build-type:          Custom
 extra-source-files:
-- README.md
+- README.org
 data-files:
 - fonts/*.ttf
 - images/*.png
