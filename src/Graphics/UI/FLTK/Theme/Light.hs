@@ -215,7 +215,7 @@ import Graphics.UI.FLTK.Theme.Light.Wizard
 --   * Fill and "Nice" Sliders - here they fallback to the slider provided by the theme.
 --   * [FLTK's Pre-Made Modal Dialogs](https://hackage.haskell.org/package/fltkhs/docs/Graphics-UI-FLTK-LowLevel-Ask.html)
 --   * [FLTK's Square Clock](https://hackage.haskell.org/package/fltkhs/docs/Graphics-UI-FLTK-LowLevel-Clock.html)
---   * Fluid integration - FLTK ships with [FLUID](https://en.wikipedia.org/wiki/FLUID) GUI builder and the default FLTKHS integrates ("Graphics.UI.FLTK.LowLevel.FLTKHS#FluidSupport") with it quite well but currently there is no support for using it
+--   * Fluid integration - FLTK ships with [FLUID](https://en.wikipedia.org/wiki/FLUID) GUI builder and the default FLTKHS <http://hackage.haskell.org/package/fltkhs/docs/Graphics-UI-FLTK-LowLevel-FLTKHS.html#g:16 integrates> with it quite well but currently there is no support for using it
 --     to create themed apps. This is definitely on the roadmap and should be resolved in the near future.
 
 -- $HaddockBarf
@@ -233,7 +233,7 @@ import Graphics.UI.FLTK.Theme.Light.Wizard
 
 -- $Installation
 -- Installation follows the same basic procedure as
--- "Graphics.UI.FLTK.LowLevel.FLTKHS#Installation". The only difference is that
+-- <http://hackage.haskell.org/package/fltkhs/docs/Graphics-UI-FLTK-LowLevel-FLTKHS.html#g:5 FLTKHS>. The only difference is that
 -- those instructions use the default [hello world
 -- skeleton](https://github.com/deech/fltkhs-hello-world) whereas for themed UIs
 -- you'll want the [themed
@@ -278,7 +278,7 @@ import Graphics.UI.FLTK.Theme.Light.Wizard
 
 -- $RunningInTheREPL
 -- Assuming you're using the [skeleton project](https://github.com/deech/fltkhs-light-theme-skeleton) getting a GUI running in
--- GHCi is pretty much the same "Graphics.UI.FLTK.LowLevel.FLTKHS#RunningInTheREPL" except the command to run the REPL is:
+-- GHCi is pretty much the same <http://hackage.haskell.org/package/fltkhs/docs/Graphics-UI-FLTK-LowLevel-FLTKHS.html#g:20 FLTKHS> except the command to run the REPL is:
 --
 -- @
 -- stack ghci --flag fltkhs:bundled fltkhs-light-theme-skeleton:exe:fltkhs-light-theme-skeleton
