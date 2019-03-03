@@ -49,6 +49,7 @@ import Graphics.UI.Font.Load
 import Data.Maybe
 import Control.Monad
 import Paths_fltkhs_themes
+import Control.Applicative
 
 -- | An opaque type that contains all of the resources needed by this theme.
 -- Getting to the resources requires threading something of the type as an implicit
@@ -177,7 +178,13 @@ loadAssets = do
                     return (face,f)
                 )
                 fonts
-  let fontNumbers = catMaybes (Data.List.map (\fName -> Prelude.lookup fName withFaces) fontNames)
+  let fontNumbers = catMaybes (Data.List.map (\fName ->
+                                                  -- OSX Mojave sees this font as "Josefin Slab SemiBold" while Linux and Windows
+                                                  -- see it as "Josefin Slab"
+                                                  if (fName == "Josefin Slab SemiBold")
+                                                  then (Prelude.lookup fName withFaces) <|> (Prelude.lookup "Josefin Slab" withFaces)
+                                                  else Prelude.lookup fName withFaces)
+                                             fontNames)
   _ <- FL.setScheme "gtk+"
   let addImages as = as (images !! 0)
                         (images !! 1)
