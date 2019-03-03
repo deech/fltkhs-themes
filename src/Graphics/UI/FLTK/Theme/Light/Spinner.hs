@@ -157,7 +157,7 @@ spinnerNew rect l = mdo
   let (inputRect,upRect,downRect) = spinnerComponentBounds rect
   LowLevel.begin s
   i <- inputNew inputRect Nothing Nothing
-  LowLevel.setValue i "1"
+  _ <- LowLevel.setValue i "1"
   LowLevel.setInputType i LowLevel.FlIntInput
   LowLevel.setWhen i [WhenEnterKey, WhenRelease]
   LowLevel.setCallback i (spinnerInputCallback s)

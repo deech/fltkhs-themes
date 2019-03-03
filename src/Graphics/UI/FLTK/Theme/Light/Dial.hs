@@ -21,6 +21,7 @@ import qualified Graphics.UI.FLTK.LowLevel.FL as FL
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
 import Graphics.UI.FLTK.Theme.Light.Assets
 
+
 dialOutline w h rW rH a1X a1Y rWWithStroke rHWithStroke bigCircle a2X a2Y sw colorString =
     "<svg width=\"" ++ (show w) ++ "\" height=\"" ++ (show h) ++ "\" viewBox=\"" ++ (show (-rW)) ++ " " ++ (show (-rH)) ++ " " ++ (show w) ++ " " ++ (show h) ++ "\" >"
   ++ "<path "
@@ -59,6 +60,7 @@ fillEllipse w h rW rH startX startY rWWithStroke rHWithStroke bigCircle endX end
   ++ "/>"
   ++ "</svg>"
 
+arrow :: [String]
 arrow =
   [
     "<svg width=\"%d\" height=\"%d\" viewBox=\"%f %f %d %d\" transform=\"rotate(%f)\">"
@@ -86,12 +88,19 @@ makeDialOutline (Size (Width w) (Height h)) a1 a2 colorString =
 center :: Int -> Int -> (Double,Double)
 center w h = (fromIntegral w / 2, fromIntegral h / 2)
 
+strokeWidth :: PreciseSize -> Double
 strokeWidth = percentOfSmallerEllipseRadius 10
+meterCenterRadius :: PreciseSize -> Double
 meterCenterRadius = percentOfSmallerEllipseRadius 8
+meterWidth :: PreciseSize -> Double
 meterWidth = percentOfSmallerEllipseRadius 5
+knobPadding :: PreciseSize -> Double
 knobPadding = percentOfSmallerEllipseRadius 3
+arrowBase :: PreciseSize -> Double
 arrowBase = percentOfSmallerEllipseRadius 25
+arrowHeight :: PreciseSize -> Double
 arrowHeight = percentOfSmallerEllipseRadius 20
+arrowPadding :: PreciseSize -> Double
 arrowPadding = percentOfSmallerEllipseRadius 15
 
 makeMeter :: PreciseAngle -> Size -> String
@@ -133,6 +142,7 @@ makeArrow (Size (Width w) (Height h)) a =
       (circleR-sw-arrH-knobP-arrP) (arrH/2)
       (circleR-sw-arrH-knobP-arrP) (-(arrB/2))
 
+wrapSvgs :: [String] -> String
 wrapSvgs svgs =
   concat (intersperse "\n" (["<svg>"] ++ svgs ++ ["</svg>"]))
 

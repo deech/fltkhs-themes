@@ -33,8 +33,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Graphics.UI.FLTK.LowLevel.FL as FL
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
-import qualified Graphics.UI.FLTK.LowLevel.Hierarchy as Hierarchy
-import qualified Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Assets
 
 sliderKnobColor :: IO Color
@@ -71,6 +69,7 @@ data GaugeSliderSpec =
 defaultGaugeHeight :: Int
 defaultGaugeHeight = 10
 
+mkGaugeSliderSpec :: GaugeSliderSpec
 mkGaugeSliderSpec =
   GaugeSliderSpec
   {
@@ -164,18 +163,15 @@ drawSlider s gaugeSpec rect = do
                    Nothing -> toRectangle (x,y,w-1,h-1)
                    Just spec -> gaugeBoxBounds (sliderIsHorizontal t) spec rect
              }
-      (xDiff,yDiff,wDiff,hDiff) = FL.boxDifferences rect (borderBoxBounds spec)
   drawBorderBox s spec (maybe True (\_ -> False) gaugeSpec)
   LowLevel.drawLabel s Nothing
   min' <- LowLevel.getMinimum s
   max' <- LowLevel.getMaximum s
   value' <- fmap (sliderValue min' max') (LowLevel.getValue s)
-  oldColor <- LowLevel.flcColor
   case gaugeSpec of
     Nothing -> drawPill rect value' (sliderIsHorizontal t)
     Just gaugeSpec ->
-      let (xDiff,yDiff,wDiff,hDiff) = FL.boxDifferences rect (borderBoxBounds spec)
-          (xPad,yPad) = (xDiff `intDiv` 2, yDiff `intDiv` 2)
+      let (xDiff,yDiff,_,_) = FL.boxDifferences rect (borderBoxBounds spec)
       in do
       LowLevel.flcRectfWithColor (toRectangle (x,y,w,yDiff)) color
       LowLevel.flcRectfWithColor (toRectangle (x,y+yDiff,xDiff,h-(yDiff*2))) color
@@ -185,9 +181,8 @@ drawSlider s gaugeSpec rect = do
       drawGauge (borderBoxBounds spec) triangleColor rect value' (sliderIsHorizontal t) gaugeSpec
   where
     gaugeSvg (borderR,borderG,borderB) bounds innerBounds v horizontal spec =
-      let (x',y',w',h') = fromRectangle bounds
+      let (_,_,w',h') = fromRectangle bounds
           (_,_,innerW,innerH) = fromRectangle innerBounds
-          (doubleX,doubleY,doubleW,doubleH) = (fromIntegral x',fromIntegral y',fromIntegral w',fromIntegral h')
           svg =
             "<svg width=\"%d\" height=\"%d\" transform=\"translate(%f,%f)\">\n"
             ++ "<g>\n"
@@ -253,8 +248,6 @@ drawSlider s gaugeSpec rect = do
     pillCornerRadius = 2
     pillLength :: Double
     pillLength = 20.0
-    pillCenter :: Double
-    pillCenter = pillLength / 2.0
     pillPadding :: Int
     pillPadding = 3
     pillEndPadding :: Int

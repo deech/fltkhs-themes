@@ -38,10 +38,8 @@ import Data.STRef
 import Foreign.C.Types
 import Graphics.UI.FLTK.LowLevel.Fl_Enumerations as Enumerations
 import Graphics.UI.FLTK.LowLevel.Fl_Types
-import Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Common
 import Graphics.UI.FLTK.Theme.Light.Dial
-import Graphics.UI.FLTK.Theme.Light.Group
 import Graphics.UI.FLTK.Theme.Light.Menu
 import Graphics.UI.FLTK.Theme.Light.Slider
 import Graphics.UI.FLTK.Theme.Light.Window
@@ -164,7 +162,6 @@ drawHueBox handleRadius gaugeHeight stateRef c b = do
         LowLevel.draw i (Position (X (x'+1)) (Y (y'+1)))
         LowLevel.destroy i)
     iM
-  damages <- LowLevel.getDamage b
   let svg =
        Printf.printf hueBoxHandleSvg
          (handleRadius*2) (handleRadius*2) (-handleRadius) (-handleRadius) (handleRadius*2) (handleRadius*2)
@@ -217,10 +214,7 @@ makeColorChooserComponentBounds layout rect gaugeHeight =
       innerRectHeight = h'-(paddingHeight*2)
       betweenPadding = (betweenPaddingPercent layout) `percentOf` innerRectWidth
       outerHueBoxWidth = (hueBoxWidthPercentage layout) `percentOf` innerRectWidth
-      hueBoxWidth = outerHueBoxWidth - (truncate (hueBoxHandleRadius layout*2.0))
-      hueBoxHeight = innerRectHeight-gaugeHeight
       sliderWidth = (sliderWidthPercentage layout) `percentOf` innerRectWidth
-      innerRect = (x'+paddingWidth,y'+paddingHeight,innerRectWidth,innerRectHeight)
       previewPaneWidth = (previewPanePercentage layout) `percentOf` innerRectWidth
   in
     ColorChooserComponentBounds
@@ -295,7 +289,7 @@ generateImage size@(Size (Width w') (Height h')) =
 
 -- | Generate the background of the saturation slider
 generateVImage :: RGB -> Size -> IO (Ref LowLevel.SVGImage)
-generateVImage (r',g',b') size@(Size (Width w') (Height h')) =
+generateVImage (r',g',b') (Size (Width w') (Height h')) =
   let svgString :: String
       svgString =
         "<svg width=\"" ++ (show w') ++ "\" height=\"" ++ (show h') ++ "\"/>\n" ++
@@ -329,7 +323,7 @@ handleHueBox handleRadius gaugeHeight c b e = do
         in do
         vf <- FL.visibleFocus
         when vf ((FL.setFocus b) >> LowLevel.redraw b)
-        eventPos@(Position (X ex)(Y ey)) <- FL.eventPosition
+        (Position (X ex)(Y ey)) <- FL.eventPosition
         let xDiff = ex-x'
             xIncrement =
               if (xDiff <= 0) then 0.0
@@ -434,7 +428,6 @@ updateHsv stateRef slider hueBox rInput gInput bInput previewGroup colorChooser 
        LowLevel.setDamage hueBox [DamageScroll]
        LowLevel.setDamage slider [DamageExpose]
        LowLevel.setDamage previewGroup [DamageExpose]
-       ds <- LowLevel.getDamage slider
        modifyIORef stateRef (\state -> state { colorChooserHue = Between0And6 h }))
    when (s /= currS)
      (do
@@ -444,7 +437,7 @@ updateHsv stateRef slider hueBox rInput gInput bInput previewGroup colorChooser 
        modifyIORef stateRef (\state -> state { colorChooserSaturation = Between0And1 s }))
    when (v /= currV)
      (do
-       LowLevel.setValue slider (1-v)
+       _ <- LowLevel.setValue slider (1-v)
        LowLevel.setDamage previewGroup [DamageExpose]
        modifyIORef stateRef (\state -> state { colorChooserValue = Between0And1 v }))
    when (changed == 1)
@@ -518,9 +511,9 @@ colorDialCallback rValue gValue bValue c = do
   gV <- LowLevel.getValue gValue
   bV <- LowLevel.getValue bValue
   m <- LowLevel.getMode c
-  case m of
-    HsvMode -> LowLevel.setHsv c (Between0And6 rV, Between0And1 gV, Between0And1 bV)
-    _ -> LowLevel.setRgb c (Between0And1 rV, Between0And1 gV, Between0And1 bV)
+  _ <- case m of
+         HsvMode -> LowLevel.setHsv c (Between0And6 rV, Between0And1 gV, Between0And1 bV)
+         _ -> LowLevel.setRgb c (Between0And1 rV, Between0And1 gV, Between0And1 bV)
   LowLevel.doCallback c
 
 -- | React to changes in the saturation slider
@@ -528,7 +521,7 @@ sliderCallback :: IORef ColorChooserState -> Ref LowLevel.ColorChooser -> Ref Lo
 sliderCallback stateRef c slider = do
   state <- readIORef stateRef
   v <- LowLevel.getValue slider
-  LowLevel.setHsv c (colorChooserHue state, colorChooserSaturation state, Between0And1 (1.0-v))
+  _ <- LowLevel.setHsv c (colorChooserHue state, colorChooserSaturation state, Between0And1 (1.0-v))
   LowLevel.doCallback c
 
 -- | Set the dials according the selected color
@@ -547,9 +540,9 @@ setValuators rInput gInput bInput c = do
                     LowLevel.setStep i (1%1000)
                     LowLevel.precision i 3)
             [rInput,gInput,bInput]
-          LowLevel.setValue rInput r
-          LowLevel.setValue gInput g
-          LowLevel.setValue bInput b
+          _ <- LowLevel.setValue rInput r
+          _ <- LowLevel.setValue gInput g
+          _ <- LowLevel.setValue bInput b
           LowLevel.setSelectionColor rInput redColor
           LowLevel.setSelectionColor gInput greenColor
           LowLevel.setSelectionColor bInput blueColor
@@ -568,9 +561,9 @@ setValuators rInput gInput bInput c = do
                     LowLevel.range i 0 1
                     LowLevel.setStep i (1%1000))
             [gInput,bInput]
-          LowLevel.setValue rInput h
-          LowLevel.setValue gInput s
-          LowLevel.setValue bInput v
+          _ <- LowLevel.setValue rInput h
+          _ <- LowLevel.setValue gInput s
+          _ <- LowLevel.setValue bInput v
           color <- commonFillColor
           LowLevel.setSelectionColor rInput color
           LowLevel.setSelectionColor gInput color
@@ -589,9 +582,9 @@ setValuators rInput gInput bInput c = do
                     LowLevel.setStep i 1
                     LowLevel.precision i 3)
             [rInput,gInput,bInput]
-          LowLevel.setValue rInput r
-          LowLevel.setValue gInput g
-          LowLevel.setValue bInput b
+          _ <- LowLevel.setValue rInput r
+          _ <- LowLevel.setValue gInput g
+          _ <- LowLevel.setValue bInput b
           LowLevel.setSelectionColor rInput redColor
           LowLevel.setSelectionColor gInput greenColor
           LowLevel.setSelectionColor bInput blueColor
@@ -609,9 +602,9 @@ setValuators rInput gInput bInput c = do
                     LowLevel.setStep i 1
                     LowLevel.precision i 3)
             [rInput,gInput,bInput]
-          LowLevel.setValue rInput r
-          LowLevel.setValue gInput g
-          LowLevel.setValue bInput b
+          _ <- LowLevel.setValue rInput r
+          _ <- LowLevel.setValue gInput g
+          _ <- LowLevel.setValue bInput b
           LowLevel.setSelectionColor rInput redColor
           LowLevel.setSelectionColor gInput greenColor
           LowLevel.setSelectionColor bInput blueColor
@@ -654,7 +647,7 @@ drawColorDials c stateRef rect initialColor =
   let modeMenuHeight = 20
       colorDialHeight = 40
       modeMenuPadding = 3
-      (x',y',w',h') = fromRectangle rect
+      (x',y',w',_) = fromRectangle rect
       dialSize = Size (Width colorDialHeight) (Height colorDialHeight)
   in do
   modeMenu <- choiceNew (toRectangle (x',y',w',modeMenuHeight)) Nothing
@@ -681,14 +674,14 @@ drawColorDials c stateRef rect initialColor =
   previewGroup <- groupNew (toRectangle (x',colorDialGroupY+colorDialGroupH,w',colorDialGroupY-y')) Nothing
   let previewBoxHeight = 20 -- (h'-colorDialGroupH-modeMenuHeight-modeMenuPadding) `intDiv` 2
   LowLevel.begin previewGroup
-  LowLevel.boxCustom (toRectangle (x',colorDialGroupY+colorDialGroupH+modeMenuPadding,w',previewBoxHeight-modeMenuPadding)) Nothing
-    (Just (drawPreviewColor c))
-    Nothing
+  _ <- LowLevel.boxCustom (toRectangle (x',colorDialGroupY+colorDialGroupH+modeMenuPadding,w',previewBoxHeight-modeMenuPadding)) Nothing
+         (Just (drawPreviewColor c))
+         Nothing
   case initialColor of
     Just initialColor' -> do
-      LowLevel.boxCustom (toRectangle (x',colorDialGroupY+colorDialGroupH+modeMenuPadding+previewBoxHeight,w',previewBoxHeight-modeMenuPadding)) Nothing
-        (Just (drawCurrentColor initialColor'))
-        Nothing
+      _ <- LowLevel.boxCustom (toRectangle (x',colorDialGroupY+colorDialGroupH+modeMenuPadding+previewBoxHeight,w',previewBoxHeight-modeMenuPadding)) Nothing
+             (Just (drawCurrentColor initialColor'))
+             Nothing
       return ()
     Nothing -> return ()
   LowLevel.end previewGroup
@@ -748,7 +741,7 @@ colorChooserNew rect l' initialColor =
          (Just (LowLevel.defaultCustomWidgetFuncs {LowLevel.handleCustom = Just handleHover}))
   sliderSetup g
   LowLevel.setCallback g (sliderCallback stateRef c)
-  let (paneX, paneY, paneW, paneH) = fromRectangle (colorChooserPreviewPaneBounds componentBounds)
+  let (paneX, _, paneW, _) = fromRectangle (colorChooserPreviewPaneBounds componentBounds)
       (Rectangle (Position _ (Y hueBoxY)) (Size _ (Height hueBoxHeight))) = hueBoxBounds (colorChooserHueBoxBounds componentBounds)(hueBoxHandleRadius layout) defaultGaugeHeight
   rgbE <- LowLevel.getRgb c
   let previewPaneDialBounds = toRectangle (paneX,hueBoxY,paneW,hueBoxHeight)
@@ -759,10 +752,10 @@ colorChooserNew rect l' initialColor =
   LowLevel.setResizable previewPaneDialGroup (Nothing :: (Maybe (Ref LowLevel.Widget)))
   either
     (\_ -> return ())
-    (\rgb@(Between0And1 r,Between0And1 g,Between0And1 b) -> do
-        LowLevel.setValue rValue r
-        LowLevel.setValue gValue g
-        LowLevel.setValue bValue b
+    (\(Between0And1 r,Between0And1 g,Between0And1 b) -> do
+        _ <- LowLevel.setValue rValue r
+        _ <- LowLevel.setValue gValue g
+        _ <- LowLevel.setValue bValue b
         setValuators rValue gValue bValue c
         return ())
     rgbE
@@ -781,10 +774,10 @@ flcColorChooser name rectM initialColor mode =
       colorChooserPadding = 5
       windowBounds = maybe ((Rectangle (Position (X 215) (Y 200)) (Size (Width 400) (Height (200 + buttonBarHeight))))) id rectM
       colorChooserBounds =
-        let (x',y',w',h') = fromRectangle windowBounds
+        let (_,_,w',h') = fromRectangle windowBounds
         in toRectangle(colorChooserPadding,0,w'-(colorChooserPadding*2),h'-buttonBarHeight)
       buttonBarBounds =
-        let (x',y',w',h') = fromRectangle windowBounds
+        let (_,_,w',h') = fromRectangle windowBounds
         in toRectangle (colorChooserPadding,h'-buttonBarHeight,w'-(colorChooserPadding*2),buttonBarHeight)
       buttonWidth = 65
       buttonHeight = 30

@@ -128,7 +128,7 @@ fontNames =
   [
     "DejaVu Sans"
   , "Yanone Kaffeesatz Regular"
-  , "Josefin Slab"
+  , "Josefin Slab SemiBold"
   ]
 
 imagePaths :: [FilePath]
@@ -161,7 +161,7 @@ loadAssets = do
   images <- mapM
               (\p -> do
                   bytes <- B.readFile p `catch`
-                            (\(e :: SomeException) -> ioError
+                            (\(_ :: SomeException) -> ioError
                                  (userError ("loadAssets (fatal error): image does not exist at path: " ++ p)))
                   iE <- pngImageNewWithData (T.pack "") bytes
                   case iE of

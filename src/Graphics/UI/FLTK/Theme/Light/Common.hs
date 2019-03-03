@@ -412,7 +412,7 @@ centerInRectangleByRelativePosition r (X xOff) (Y yOff) =
 -- not checked.
 positionInside :: Rectangle -> Size -> X -> Y -> Rectangle
 positionInside r (Size (Width sW) (Height sH)) (X xOff) (Y yOff) =
-  let (rX,rY,rW,rH) = fromRectangle r
+  let (rX,rY,_,_) = fromRectangle r
   in toRectangle (rX+xOff,rY+yOff,sW,sH)
 
 -- | Transform the height.

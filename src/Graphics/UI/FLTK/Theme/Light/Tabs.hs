@@ -68,7 +68,6 @@ drawTabs spec t = do
              LowLevel.flcEndLine
              LowLevel.flcBeginLine
              LowLevel.flcVertex (toPrecisePosition (Position (X (tabSelectedX + tabSelectedWidth)) yOffset))
-             let tabsEnd = if (tabsX + tabsWidth < rightMostX) then tabsX + tabsWidth else rightMostX
              LowLevel.flcVertex (toPrecisePosition (Position (X (tabsX+tabsWidth)) yOffset))
              LowLevel.flcEndLine
              LowLevel.flcPopClip
@@ -139,8 +138,8 @@ drawTabs spec t = do
     LowLevel.flcSetDrawShortcut oldShortcut
 
 -- | Damage the tabs widget appropriately for redraw
-lightTabRedrawTabs :: TabSpec -> Ref LowLevel.Tabs -> IO ()
-lightTabRedrawTabs spec t = do
+lightTabRedrawTabs :: Ref LowLevel.Tabs -> IO ()
+lightTabRedrawTabs t = do
   bounds <- LowLevel.getRectangle t
   let (tabsX,tabsY,tabsWidth,tabsHeight) = fromRectangle bounds
   (Height tabHeight) <- LowLevel.tabHeight t
@@ -152,11 +151,10 @@ lightTabRedrawTabs spec t = do
 -- | Handles all events to the tab
 lightTabHandleCustom :: TabSpec -> Ref LowLevel.Tabs -> Event -> IO (Either UnknownEvent ())
 lightTabHandleCustom spec t e = do
-  tl <- LowLevel.getLabel t
   bounds <- LowLevel.getRectangle t
   let (tabsX,tabsY,tabsWidth,tabsHeight) = fromRectangle bounds
   offset <- readIORef (tabViewOffset spec)
-  pos@(Position (X x') (Y y')) <- FL.eventPosition
+  pos@(Position _ (Y y')) <- FL.eventPosition
   nextIndexAndWidget <- lightTabWhichCustom spec t pos
   (_,_,widths) <- lightTabPositionsCustom spec t
   let nextWidget = fmap (\(_,w) -> w) nextIndexAndWidget
@@ -175,8 +173,7 @@ lightTabHandleCustom spec t e = do
           then LowLevel.handleSuper t e
           else do
             lastSelected <- LowLevel.getPush t
-            LowLevel.setPush t (Nothing :: (Maybe (Ref LowLevel.Widget)))
-            focusedWidget <- FL.focus
+            _ <- LowLevel.setPush t (Nothing :: (Maybe (Ref LowLevel.Widget)))
             case lastSelected of
               Nothing -> return (Right ())
               Just w -> do
@@ -184,8 +181,8 @@ lightTabHandleCustom spec t e = do
                 when vf
                   (do
                     imFocused <- refPtrEquals w t
-                    if imFocused then lightTabRedrawTabs spec t
-                    else FL.setFocus(t) >> lightTabRedrawTabs spec t)
+                    if imFocused then lightTabRedrawTabs t
+                    else FL.setFocus(t) >> lightTabRedrawTabs t)
                 changed <- LowLevel.setValue t lastSelected
                 case changed of
                   Left NoChange -> do
@@ -236,7 +233,7 @@ lightTabHandleCustom spec t e = do
             Just (AtIndex i) ->
               if (i == 0) then LowLevel.handleSuper t e
                 else
-                let (X x, Width w) = offsetWidths !! (i-1)
+                let (X x, _) = offsetWidths !! (i-1)
                     currOffset = x - tabsX
                 in do
                  if (currOffset >= 0)
@@ -346,7 +343,7 @@ lightTabWhichCustom spec t pos = do
       (_,_,widths) <- lightTabPositionsCustom spec t
       offset <- readIORef (tabViewOffset spec)
       let tab = find
-                  (\(i,(x,w)) -> insideRectangle pos (Rectangle (Position x (Y tabBarY)) (Size w (Height tabBarHeight))))
+                  (\(_,(x,w)) -> insideRectangle pos (Rectangle (Position x (Y tabBarY)) (Size w (Height tabBarHeight))))
                   (zip (map AtIndex [0 ..]) (map (\(X x, Width w) -> (X (x+offset), Width w)) widths))
       cs <- LowLevel.getArray t
       return (fmap (\(AtIndex i, _) -> (AtIndex i,cs !! i)) tab)
@@ -354,9 +351,6 @@ lightTabWhichCustom spec t pos = do
 -- | A default 'TabSpec'
 tabSpec :: (?assets :: Assets) => Rectangle -> IO TabSpec
 tabSpec rectangle = do
-  let (tabsX,tabsY,tabsWidth,tabsHeight) = fromRectangle rectangle
-      buttonWidth = 15
-      buttonHeight = 15
   borderColor <- commonSelectionColor
   color <- commonColor
   offset <- newIORef 0
@@ -386,7 +380,7 @@ tabsNew rectangle label = do
              , LowLevel.tabPositionsCustom = lightTabPositionsCustom spec
              , LowLevel.tabHeightCustom = lightTabHeightCustom spec
              , LowLevel.tabWhichCustom = lightTabWhichCustom spec
-             , LowLevel.tabRedrawTabs = lightTabRedrawTabs spec
+             , LowLevel.tabRedrawTabs = lightTabRedrawTabs
              , LowLevel.tabClientArea = lightTabClientAreaCustom spec
              }))
          (Just

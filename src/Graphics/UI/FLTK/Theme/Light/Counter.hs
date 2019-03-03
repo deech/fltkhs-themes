@@ -70,7 +70,6 @@ drawCounter pressedRef c =
   let arrowBox :: Color -> Rectangle -> Bool -> Ref LowLevel.PNGImage -> IO ()
       arrowBox color rect pressed logo = do
         selectionColor <- LowLevel.getSelectionColor c
-        fontSize <- LowLevel.getLabelsize c
         spec <- makeFillSpec rect color selectionColor
         fillRectangle (spec { fillCornerRadius = 0 }) pressed
         LowLevel.flcBeginLine

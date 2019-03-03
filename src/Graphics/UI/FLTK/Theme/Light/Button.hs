@@ -34,7 +34,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Graphics.UI.FLTK.LowLevel.FL as FL
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
-import qualified Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Assets
 
 -- | Check of the given button is 'HiddenButtonType'
@@ -140,7 +139,6 @@ drawDownArrow bounds arrowColor (FontSize size)=
       arrowY = y + (h `intDiv` 2) - (arrowSize `intDiv` 2)
       arrowBoundingBox = toRectangle (arrowX, arrowY, arrowSize, arrowSize)
   in do
-  oldColor <- LowLevel.flcColor
   LowLevel.flcSetColor arrowColor
   LowLevel.flcBeginPolygon
   LowLevel.flcVertex (PrecisePosition (PreciseX (fromIntegral arrowX)) (PreciseY (fromIntegral arrowY)))
@@ -158,7 +156,6 @@ drawMenuButton m = do
   let noBox = case b of { NoBox -> True; _ -> False }
   if (t /= 0 || noBox) then return ()
     else do
-      fillSpec <- buttonFillSpec m
       itemIndex <- LowLevel.getValue m
       fontSize <- LowLevel.getLabelsize m
       drawIndicatorButton (\spec _ color fs -> drawDownArrow (fillBounds spec) color fs) (maybe False (const True) itemIndex) False False fontSize m
@@ -166,7 +163,7 @@ drawMenuButton m = do
 -- | Draw the light part of a LightButton. The 'Bool' indicates whether the light is on.
 drawLight :: FillSpec -> Bool -> Color -> FontSize -> IO Rectangle
 drawLight spec lightOn lightColor (FontSize lightDiameter) =
-  let (x,y,w,h) = fromRectangle (fillBounds spec)
+  let (x,y,_,h) = fromRectangle (fillBounds spec)
       lightX = x + 3
       lightY = y + (h `intDiv` 2)
       lightRadius = (fromIntegral lightDiameter / 2.0)
@@ -186,7 +183,7 @@ drawLight spec lightOn lightColor (FontSize lightDiameter) =
 -- | Draw the radio part of a RoundButton. The 'Bool' indicates whether it is enabled.
 drawRound :: FillSpec -> Bool -> Color -> FontSize -> IO Rectangle
 drawRound spec radioOn radioColor (FontSize fs) =
-  let (x,y,w,h) = fromRectangle (fillBounds spec)
+  let (x,y,_,h) = fromRectangle (fillBounds spec)
       radioBoxX = x + 3
       radioBoxY = fromIntegral y + (fromIntegral h / 2.0)
       radioBoxWidth :: Int
@@ -199,10 +196,8 @@ drawRound spec radioOn radioColor (FontSize fs) =
         "<svg width=\"%d\" height=\"%d\" viewBox=\" %f %f %d %d\">\n" ++
         "<circle cx=\"0\" cy=\"0\" r=\"%f\" fill=\"%s\" stroke=\"%s\"/>" ++
         "</svg>\n"
+      radioRadius :: Double
       radioRadius = (fromIntegral radioBoxWidth) / 4.5
-      radioDiameter = radioRadius * 2
-      radioX = fromIntegral radioBoxX + radioBoxHalfway - radioRadius
-      radioY = radioBoxY - radioRadius
   in do
   (borderColorR, borderColorG, borderColorB) <- FL.getColorRgb (fillBorderColor spec)
   (radioColorR, radioColorG, radioColorB) <- FL.getColorRgb (if radioOn then radioColor else (fillTopColor spec))
@@ -226,7 +221,7 @@ drawRound spec radioOn radioColor (FontSize fs) =
 -- | Draw the check part of a CheckButton. The 'Bool' indicated whether to draw the check or not.
 drawCheck :: FillSpec -> Bool -> Color -> FontSize -> IO Rectangle
 drawCheck spec checked checkColor (FontSize fontSize) =
-  let (x,y,w,h) = fromRectangle (fillBounds spec)
+  let (x,y,_,h) = fromRectangle (fillBounds spec)
       checkBoxWidth :: Int = fromIntegral fontSize
       checkBoxHeight = checkBoxWidth
       checkBoxX = x + 3
@@ -397,7 +392,6 @@ roundButtonNew rectangle label = do
                      (do
                        (x,y,w,h) <- fmap fromRectangle (LowLevel.getRectangle b)
                        bx <- FL.boxDx BorderBox
-                       c <- LowLevel.getColor b
                        (FontSize labelWCInt) <- LowLevel.getLabelsize b
                        v <- LowLevel.getValue b
                        let labelW :: Int

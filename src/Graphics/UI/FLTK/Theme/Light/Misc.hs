@@ -12,8 +12,8 @@ import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.Theme.Light.Common
 import Graphics.UI.FLTK.Theme.Light.Assets
 
-drawBackground :: (?assets :: Assets) => Color -> FillSpec -> Alignments -> LowLevel.Ref LowLevel.Box -> IO ()
-drawBackground c spec alignments b = do
+drawBackground :: (?assets :: Assets) => FillSpec -> Alignments -> LowLevel.Ref LowLevel.Box -> IO ()
+drawBackground spec alignments b = do
   r <- LowLevel.getRectangle b
   fillRectangle (spec { fillBounds = r }) False
   LowLevel.drawLabel b (Just (r,alignments))
@@ -41,7 +41,7 @@ header c r l alignments =
         , fillBorderHovered = c
         }
   in do
-    b <- LowLevel.boxCustom r (Just l) (Just (drawBackground c fillSpec alignments)) Nothing
+    b <- LowLevel.boxCustom r (Just l) (Just (drawBackground fillSpec alignments)) Nothing
     LowLevel.setLabel b l
     return b
 

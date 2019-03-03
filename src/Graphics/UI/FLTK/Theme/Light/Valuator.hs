@@ -13,7 +13,6 @@ import Graphics.UI.FLTK.Theme.Light.Input
 import qualified Data.Text as T
 import qualified Graphics.UI.FLTK.LowLevel.FL as FL
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
-import Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Assets
 
 adjusterNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.Adjuster)
