@@ -51,6 +51,7 @@ import Graphics.UI.FLTK.LowLevel.FLTKHS hiding (colorAverage, isHorizontal, inac
 import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.Theme.Light.Assets
 import qualified Graphics.UI.FLTK.LowLevel.FL as FL
+import Foreign.Ptr
 
 -- | For drawing a rectangular widget that is borderless on the top or bottom. Guess
 -- it could be passed into a function as yet another Bool but we have too many of those
@@ -148,7 +149,7 @@ commonSelectionColor :: IO Color
 commonSelectionColor = rgbColorWithRgb (50, 100, 201)
 
 -- | Check if the given references point to the same 'Widget'.
-isWidget :: (Parent a Widget) => Ref a -> IO (Maybe (Ref b)) -> IO Bool
+isWidget :: (Parent a WidgetBase) => Ref a -> IO (Maybe (Ref b)) -> IO Bool
 isWidget this thatM = thatM >>= maybe (return False) (refPtrEquals this)
 
 -- | Check if the given 'Position' is inside the 'Rectangle'. Useful for
@@ -227,7 +228,7 @@ roundedBoxPoints (Rectangle (Position (X x) (Y y)) (Size (Width w) (Height h))) 
 
 -- | Draw a bordered rectangle for the given widget according to 'BorderBoxSpec', the 'Bool'
 -- determines if it should be filled with 'borderBoxFillColor'.
-drawBorderBox :: (Parent a Widget) => Ref a -> BorderBoxSpec -> Bool -> IO ()
+drawBorderBox :: (Parent a WidgetBase) => Ref a -> BorderBoxSpec -> Bool -> IO ()
 drawBorderBox w spec shouldFill = do
   oldColor <- flcColor
   focused <- isWidget w FL.focus
@@ -245,14 +246,14 @@ drawBorderBox w spec shouldFill = do
 
 -- | The default FLTK widgets don't react to a mouse pointer hovering over them.
 -- This handler when applied to a customized widget initiates a 'redraw' when the
--- mouse enters and leaves the widget area.
+-- mouse enters and leaves the widget area. It also takes this widget's default 'handle'
+-- so it can be called for events that don't apply to hovering, eg. Show, Hide etc.
 handleHover ::
   (
-    Parent orig Widget,
+    orig ~ (a b),
+    Parent orig WidgetBase,
     Match x ~ FindOp orig orig (Redraw ()),
-    Op (Redraw ()) x orig (IO ()),
-    Match y ~ FindOp orig orig (HandleSuper ()),
-    Op (HandleSuper ()) y orig (Event -> IO (Either UnknownEvent ()))
+    Op (Redraw ()) x orig (IO ())
   )
   => Ref orig -> Event -> IO (Either UnknownEvent ())
 handleHover b e = do
@@ -263,27 +264,29 @@ handleHover b e = do
     Leave -> do
       () <- redraw b
       return (Right ())
-    _ -> handleSuper b e
+    _ -> return (Left UnknownEvent)
 
 -- | Temporarily swap out the FLTK's box drawing function for a given 'Boxtype'
 -- with 'BoxDrawF'. The 'IO' '()' action will typically use the custom function
 -- that was just swapped in some kind custom drawing routine. For example, if a
 -- custom widget used a 'BorderBox' on the FLTK side but you don't like the
 -- default 'BorderBox' look, you can override the 'draw' function of the widget
--- with this one where the 'IO' '()' action calls 'drawSuper'. For an example
+-- with this one where the 'IO' '()' action calls 'draw' on its parent. For an example
 -- use-case see 'Graphics.UI.FLTK.Theme.Light.Input.inputDraw'.
 --
 -- NOTE: The 'IO' '()' action is /not/ exception safe.
 withCustomBoxDraw :: Boxtype -> BoxDrawF -> IO () -> IO ()
 withCustomBoxDraw boxtype customBoxDrawF action = do
-  fptr <- FL.getBoxtypePrim boxtype
+  oldFptr <- FL.getBoxtype boxtype
   dx <- FL.boxDx boxtype
   dy <- FL.boxDy boxtype
   dw <- FL.boxDw boxtype
   dh <- FL.boxDh boxtype
   FL.setBoxtype boxtype (FL.FromSpec customBoxDrawF 0 0 0 0)
   action
-  FL.setBoxtype boxtype (FL.FromFunPtr fptr (fromIntegral dx) (fromIntegral dy) (fromIntegral dw) (fromIntegral dh))
+  fptr <- FL.getBoxtype boxtype
+  when (fptr /= nullFunPtr) (freeHaskellFunPtr fptr)
+  FL.setBoxtype boxtype (FL.FromFunPtr oldFptr (fromIntegral dx) (fromIntegral dy) (fromIntegral dw) (fromIntegral dh))
 
 -- | Make the default 'FillSpec' used by most of the theme color graded with the initial 'Color'. The second 'Color'
 -- is used to determine the border color.

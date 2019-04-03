@@ -34,6 +34,7 @@ import qualified Data.Text.Encoding as TE
 import qualified Graphics.UI.FLTK.LowLevel.FL as FL
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
 import Graphics.UI.FLTK.Theme.Light.Assets
+import Data.Either
 
 sliderKnobColor :: IO Color
 sliderKnobColor = rgbColorWithRgb (241,241,241)
@@ -47,7 +48,7 @@ sliderIsHorizontal VertNiceSliderType = False
 sliderIsHorizontal HorNiceSliderType  = True
 
 sliderSetup ::
-  (?assets :: Assets) => Ref LowLevel.Slider -> IO ()
+  (?assets :: Assets) => Ref LowLevel.SliderBase -> IO ()
 sliderSetup s = do
   () <- LowLevel.setColor s lightBackground
   () <- LowLevel.setBox s BorderBox
@@ -307,6 +308,12 @@ drawSlider s gaugeSpec rect = do
 {-# DEPRECATED horFillSliderNew "Fill sliders are not supported in the Light theme. 'horFillSliderNew' is the same as 'sliderNew'." #-}
 {-# DEPRECATED horNiceSliderNew "\"Nice\"sliders are not supported in the Light theme. 'horNiceSliderNew' is the same as 'sliderNew'." #-}
 
+handleSliderHover :: Ref LowLevel.SliderBase -> Event -> IO (Either UnknownEvent ())
+handleSliderHover s e = do
+  res <- handleHover s e
+  case res of
+    Left _ -> LowLevel.handleSliderBase s e
+    Right _ -> return (Right ())
 
 sliderNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.Slider)
 sliderNew rectangle label = do
@@ -317,8 +324,8 @@ sliderNew rectangle label = do
                    bounds <- LowLevel.getRectangle s
                    drawSlider s Nothing bounds
                ))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
-  sliderSetup s
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just (handleSliderHover . safeCast)) }))
+  sliderSetup (safeCast s)
   return s
 
 gaugeSliderNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.Slider)
@@ -330,7 +337,7 @@ gaugeSliderNew rectangle label = do
                    bounds <- LowLevel.getRectangle s
                    drawSlider s (Just mkGaugeSliderSpec) bounds
                ))
-         (Just (LowLevel.defaultCustomWidgetFuncs {LowLevel.handleCustom = Just handleHover}))
+         (Just (LowLevel.defaultCustomWidgetFuncs {LowLevel.handleCustom = Just (handleSliderHover . safeCast)}))
   sliderSetup (safeCast s)
   return s
 
@@ -340,7 +347,7 @@ valueSliderNew rectangle label = do
          rectangle
          label
          (Just drawValueSlider)
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just (handleSliderHover . safeCast)) }))
   sliderSetup (safeCast s)
   return s
 
@@ -350,7 +357,7 @@ horValueSliderNew rectangle label = do
          rectangle
          label
          (Just drawValueSlider)
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just (handleSliderHover . safeCast)) }))
   LowLevel.setType s HorSliderType
   sliderSetup (safeCast s)
   return (LowLevel.castTo s)
@@ -364,7 +371,7 @@ horSliderNew rectangle label = do
                    bounds <- LowLevel.getRectangle s
                    drawSlider s Nothing bounds
                ))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just (handleSliderHover . safeCast)) }))
   LowLevel.setType s HorSliderType
   sliderSetup (safeCast s)
   return (LowLevel.castTo s)
@@ -378,7 +385,7 @@ fillSliderNew rectangle label = do
                    bounds <- LowLevel.getRectangle s
                    drawSlider s Nothing bounds
                ))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just (handleSliderHover . safeCast)) }))
   LowLevel.setType s VertFillSliderType
   sliderSetup (safeCast s)
   return (LowLevel.castTo s)
@@ -392,7 +399,7 @@ horFillSliderNew rectangle label = do
                    bounds <- LowLevel.getRectangle s
                    drawSlider s Nothing bounds
                ))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just (handleSliderHover . safeCast)) }))
   sliderSetup (safeCast s)
   LowLevel.setType s HorFillSliderType
   return (LowLevel.castTo s)
@@ -406,7 +413,7 @@ horNiceSliderNew rectangle label = do
                    bounds <- LowLevel.getRectangle s
                    drawSlider s Nothing bounds
                ))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just (handleSliderHover . safeCast)) }))
   sliderSetup (safeCast s)
   LowLevel.setType s HorNiceSliderType
   return (LowLevel.castTo s)

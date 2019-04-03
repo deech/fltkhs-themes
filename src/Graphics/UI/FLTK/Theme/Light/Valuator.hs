@@ -8,6 +8,7 @@ module Graphics.UI.FLTK.Theme.Light.Valuator
 where
 import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.LowLevel.Fl_Types
+import Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Common
 import Graphics.UI.FLTK.Theme.Light.Input
 import qualified Data.Text as T
@@ -36,7 +37,7 @@ valueOutputNew rect l = do
               LowLevel.flcRectfWithColor rect color
               focused <- isWidget vo FL.focus
               inputBox focused rect color)
-          (LowLevel.drawSuper vo)
+          (LowLevel.drawValueOutputBase (safeCast vo))
   vo <- LowLevel.valueOutputCustom rect l (Just customDraw) Nothing
   LowLevel.setColor vo lightBackground
   LowLevel.setBox vo BorderBox
@@ -58,7 +59,7 @@ valueInputNew rect l = do
               LowLevel.flcRectfWithColor rect color
               focused <- isWidget vi FL.focus
               inputBox focused rect color)
-          (LowLevel.drawSuper vi)
+          (LowLevel.drawValueInputBase (safeCast vi))
   vi <- LowLevel.valueInputCustom rect l (Just customDraw) Nothing
   LowLevel.setColor vi lightBackground
   LowLevel.setBox vi BorderBox

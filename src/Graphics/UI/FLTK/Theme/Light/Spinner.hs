@@ -52,7 +52,7 @@ handleSpinner i s e =
   case e of
     Keydown -> upOrDown
     Shortcut -> upOrDown
-    _ -> LowLevel.handleSuper (safeCast s :: Ref LowLevel.Group) e
+    _ -> LowLevel.handleSpinnerBase (safeCast s) e
 
 updateInput :: Maybe T.Text -> Double -> Ref LowLevel.Input -> IO ()
 updateInput format v i =
@@ -64,7 +64,7 @@ updateInput format v i =
 
 resizeSpinner :: Ref LowLevel.Input -> Ref LowLevel.Button -> Ref LowLevel.Button -> Ref LowLevel.Spinner -> Rectangle -> IO ()
 resizeSpinner i up down s r = do
-  LowLevel.resizeSuper (safeCast s :: Ref LowLevel.Group) r
+  LowLevel.resizeSpinnerBase (safeCast s) r
   let (iRect,upRect,downRect) = spinnerComponentBounds r
   LowLevel.resize i iRect
   LowLevel.resize up upRect
@@ -168,7 +168,7 @@ spinnerNew rect l = mdo
                     spec <- buttonFillSpec b
                     r <- LowLevel.getRectangle b
                     s <- LowLevel.getDataSize upSmallImage
-                    drawRegularButton (spec { fillCornerRadius = 0 }) b
+                    drawRegularButton (spec { fillCornerRadius = 0 }) (safeCast b)
                     LowLevel.draw upSmallImage (centerInRectangle r s)))
                Nothing
   buttonSetup upButton
@@ -180,7 +180,7 @@ spinnerNew rect l = mdo
                           spec <- buttonFillSpec b
                           r <- LowLevel.getRectangle b
                           s <- LowLevel.getDataSize upSmallImage
-                          drawRegularButton (spec { fillCornerRadius = 0 }) b
+                          drawRegularButton (spec { fillCornerRadius = 0 }) (safeCast b)
                           LowLevel.draw downSmallImage (centerInRectangle r s)))
                 Nothing
   buttonSetup downButton

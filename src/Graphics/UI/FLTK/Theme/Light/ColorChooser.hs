@@ -738,8 +738,14 @@ colorChooserNew rect l' initialColor =
          (colorChooserSliderBounds componentBounds)
          Nothing
          (Just (drawSaturationSlider stateRef))
-         (Just (LowLevel.defaultCustomWidgetFuncs {LowLevel.handleCustom = Just handleHover}))
-  sliderSetup g
+         (Just (LowLevel.defaultCustomWidgetFuncs {
+                   LowLevel.handleCustom = Just (\s e -> do
+                                                    res <- handleHover s e
+                                                    case res of
+                                                      Left _ -> LowLevel.handleSliderBase (LowLevel.safeCast s) e
+                                                      Right _ -> return (Right ())
+                                                )}))
+  sliderSetup (LowLevel.safeCast g)
   LowLevel.setCallback g (sliderCallback stateRef c)
   let (paneX, _, paneW, _) = fromRectangle (colorChooserPreviewPaneBounds componentBounds)
       (Rectangle (Position _ (Y hueBoxY)) (Size _ (Height hueBoxHeight))) = hueBoxBounds (colorChooserHueBoxBounds componentBounds)(hueBoxHandleRadius layout) defaultGaugeHeight

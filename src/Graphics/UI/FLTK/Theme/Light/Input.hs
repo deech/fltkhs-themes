@@ -36,7 +36,7 @@ inputBox focused r c =
     LowLevel.flcVertex (toPrecisePosition (toPosition (x'+w'-1,y')))
     LowLevel.flcEndLine
 
-inputDraw :: Ref LowLevel.Input -> IO ()
+inputDraw :: Ref LowLevel.InputBase -> IO ()
 inputDraw i =
   withCustomBoxDraw
     BorderBox
@@ -65,7 +65,7 @@ inputDraw i =
        LowLevel.drawText i rBox)
 
 -- | Common setup function for all 'Input' widgets, sets label color, font etc.
-inputSetup :: (?assets :: Assets) => Ref LowLevel.Input -> IO ()
+inputSetup :: (?assets :: Assets) => Ref LowLevel.InputBase -> IO ()
 inputSetup i = do
   LowLevel.setColor i lightBackground
   LowLevel.setBox i BorderBox
@@ -78,8 +78,8 @@ inputSetup i = do
 
 inputNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> Maybe LowLevel.FlInputType -> IO (Ref LowLevel.Input)
 inputNew rect l it = do
-  i <- LowLevel.inputCustom rect l it (Just inputDraw) Nothing
-  inputSetup i
+  i <- LowLevel.inputCustom rect l it (Just (inputDraw . safeCast)) Nothing
+  inputSetup (safeCast i)
   return i
 
 fileInputNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.FileInput)

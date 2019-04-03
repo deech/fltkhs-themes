@@ -7,6 +7,7 @@ module Graphics.UI.FLTK.Theme.Light.Menu
 where
 import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.LowLevel.Fl_Types
+import Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Common
 import qualified Data.Text as T
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
@@ -39,7 +40,7 @@ sysMenuBarNew rectangle label = do
               LowLevel.flcEndLine
               LowLevel.flcSetColor color
           )
-          (LowLevel.drawSuper m)
+          (LowLevel.drawSysMenuBarBase (safeCast m))
   m <- LowLevel.sysMenuBarCustom
          rectangle
          label
@@ -85,4 +86,4 @@ drawChoice c = do
           borderBoxFillColor = color,
           borderBoxBounds = toRectangle (x,y,w-1,h-1)
         }
-  withCustomBoxDraw UpBox (\_ _ -> drawBorderBox c spec True) (LowLevel.drawSuper c)
+  withCustomBoxDraw UpBox (\_ _ -> drawBorderBox c spec True) (LowLevel.drawChoiceBase (safeCast c))

@@ -14,6 +14,7 @@ import Data.IORef
 import Data.List
 import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.LowLevel.Fl_Types
+import Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Button
 import Graphics.UI.FLTK.Theme.Light.Common
 import Graphics.UI.FLTK.Theme.Light.Input
@@ -121,7 +122,7 @@ handleCounter pressedRef c e = do
     Push -> setPressed
     Drag -> setPressed
     _ -> return ()
-  LowLevel.handleSuper c e
+  LowLevel.handleCounterBase (safeCast c) e
 
 counterNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.Counter)
 counterNew rect l = do

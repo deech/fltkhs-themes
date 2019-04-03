@@ -35,9 +35,10 @@ import qualified Data.Text.Encoding as TE
 import qualified Graphics.UI.FLTK.LowLevel.FL as FL
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
 import Graphics.UI.FLTK.Theme.Light.Assets
+import Data.List
 
 -- | Check of the given button is 'HiddenButtonType'
-buttonIsHidden :: Ref LowLevel.Button -> IO Bool
+buttonIsHidden :: Ref LowLevel.ButtonBase -> IO Bool
 buttonIsHidden b = do
   t <- LowLevel.getType_ b
   case t of
@@ -45,7 +46,7 @@ buttonIsHidden b = do
     _ -> return False
 
 -- | Draw a regular button, i.e not a radio button, toggle button, etc.
-drawRegularButton ::  FillSpec -> Ref LowLevel.Button -> IO ()
+drawRegularButton ::  FillSpec -> Ref LowLevel.ButtonBase -> IO ()
 drawRegularButton spec b = do
   buttonType <- LowLevel.getType_ b
   case buttonType of
@@ -64,7 +65,7 @@ drawRegularButton spec b = do
 -- label so the indicator can properly position itself next to the label and the widget itself.
 drawIndicatorButton ::
   (
-    Parent orig LowLevel.Widget,
+    Parent orig LowLevel.WidgetBase,
     Match b ~ FindOp orig orig (LowLevel.ActiveR ()),
     Op (LowLevel.ActiveR ()) b orig (IO Bool),
     Match c ~ FindOp orig orig (LowLevel.GetAlign ()),
@@ -84,7 +85,7 @@ drawIndicatorButton ::
     Match k ~ FindOp orig orig (LowLevel.GetBox ()),
     Op (LowLevel.GetBox ()) k orig (IO (Boxtype)),
     Match l ~ FindOp orig orig (LowLevel.GetParent ()),
-    Op (LowLevel.GetParent ()) l orig (IO (Maybe (Ref LowLevel.Group))),
+    Op (LowLevel.GetParent ()) l orig (IO (Maybe (Ref LowLevel.GroupBase))),
     Match m ~ FindOp orig orig (LowLevel.GetColor ()),
     Op (LowLevel.GetColor ()) m orig (IO (Color)),
     Match n ~ FindOp orig orig (LowLevel.SetColor ()),
@@ -107,7 +108,7 @@ drawIndicatorButton indicator pressed transparent hidden fs b =
         else do
           maybeParent <- LowLevel.getParent b
           case maybeParent of
-            Just (p :: Ref LowLevel.Group) -> do
+            Just (p :: Ref LowLevel.GroupBase) -> do
               c <- LowLevel.getColor p
               () <- LowLevel.setColor b c
               focused <- isWidget b FL.focus
@@ -294,6 +295,13 @@ buttonSetup b = do
   () <- LowLevel.setLabelsize b commonFontSize
   LowLevel.setAlign b (Alignments [AlignTypeInside, AlignTypeCenter , AlignTypeImageNextToText])
 
+handleButtonHover :: Ref LowLevel.ButtonBase -> Event -> IO (Either UnknownEvent ())
+handleButtonHover b e = do
+  res <- handleHover b e
+  case res of
+    Left _ -> LowLevel.handleButtonBase b e
+    Right _ -> return (Right ())
+
 buttonNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.Button)
 buttonNew rectangle label = do
   b <- LowLevel.buttonCustom
@@ -301,8 +309,8 @@ buttonNew rectangle label = do
          label
          (Just (\b -> do
                    spec <- buttonFillSpec b
-                   drawRegularButton spec b))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = Just handleHover }))
+                   drawRegularButton spec (safeCast b)))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = Just (handleButtonHover . safeCast) }))
   buttonSetup b
   return b
 
@@ -313,8 +321,8 @@ toggleButtonNew rectangle label = do
          label
          (Just (\b -> do
                    spec <- buttonFillSpec b
-                   drawRegularButton spec b))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover ) }))
+                   drawRegularButton spec (safeCast b)))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = Just (handleButtonHover . safeCast ) }))
   LowLevel.setType b ToggleButtonType
   buttonSetup b
   return (LowLevel.castTo b)
@@ -329,7 +337,7 @@ lightButtonNew rectangle label = do
                    hidden <- buttonIsHidden (safeCast b)
                    fontSize <- LowLevel.getLabelsize b
                    drawIndicatorButton drawLight pressed False hidden fontSize b))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = (Just handleHover) }))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = Just (handleButtonHover . safeCast) }))
   buttonSetup b
   LowLevel.setSelectionColor b yellowColor
   LowLevel.setAlign b (Alignments [AlignTypeInside, AlignTypeCenter, AlignTypeImageNextToText])
@@ -455,8 +463,8 @@ returnButtonNew rect l = do
   b <- LowLevel.returnButtonCustom rect l
          (Just ((\b -> do
                    spec <- buttonFillSpec b
-                   drawRegularButton spec b) . safeCast))
-         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = Just handleHover }))
+                   drawRegularButton spec (safeCast b))))
+         (Just (LowLevel.defaultCustomWidgetFuncs { LowLevel.handleCustom = Just (handleButtonHover . safeCast) }))
   buttonSetup b
   let (_,_,w',h') = fromRectangle rect
   LowLevel.setAlign b (Alignments [AlignTypeTextNextToImage])

@@ -19,6 +19,7 @@ import Data.List
 import Graphics.UI.FLTK.LowLevel.Dispatch (safeCast)
 import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.LowLevel.Fl_Types
+import Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Common
 import qualified Data.Text as T
 import qualified Graphics.UI.FLTK.LowLevel.FL as FL
@@ -170,7 +171,7 @@ lightTabHandleCustom spec t e = do
       handleRelease = do
         tabBarRect <- tabBarRectangle spec t
         if (not (insideRectangle pos tabBarRect))
-          then LowLevel.handleSuper t e
+          then LowLevel.handleTabsBase (safeCast t) e
           else do
             lastSelected <- LowLevel.getPush t
             _ <- LowLevel.setPush t (Nothing :: (Maybe (Ref LowLevel.Widget)))
@@ -195,7 +196,7 @@ lightTabHandleCustom spec t e = do
                   else return (Right ())
       handlePush =
         let adjustWhenNot yOutsideRange =
-              if yOutsideRange then LowLevel.handleSuper (safeCast t :: Ref LowLevel.Group) e
+              if yOutsideRange then LowLevel.handleTabsBase (safeCast t) e
               else
                 case nextIndex of
                   Just (AtIndex i) ->
@@ -231,7 +232,7 @@ lightTabHandleCustom spec t e = do
         SpecialKeyType Kb_Left ->
           case selectedMaybe of
             Just (AtIndex i) ->
-              if (i == 0) then LowLevel.handleSuper t e
+              if (i == 0) then LowLevel.handleTabsBase (safeCast t) e
                 else
                 let (X x, _) = offsetWidths !! (i-1)
                     currOffset = x - tabsX
@@ -239,21 +240,21 @@ lightTabHandleCustom spec t e = do
                  if (currOffset >= 0)
                  then return ()
                  else adjustOffset (currOffset - (if (i > 1) then partiallyShow (i-2) else 0))
-                 LowLevel.handleSuper t e
-            _ -> LowLevel.handleSuper t e
+                 LowLevel.handleTabsBase (safeCast t) e
+            _ -> LowLevel.handleTabsBase (safeCast t) e
         SpecialKeyType Kb_Right ->
           case selectedMaybe of
             Just (AtIndex i) ->
-              if (i == ((length widths) - 1)) then LowLevel.handleSuper t e
+              if (i == ((length widths) - 1)) then LowLevel.handleTabsBase (safeCast t) e
                 else
                 let (X x,Width w) = offsetWidths !! (i+1)
                     currOffset = (x+w) - (tabsX+tabsWidth)
                 in do
                  when (currOffset >= 0) (adjustOffset (currOffset + (if (i < (length widths - 2)) then partiallyShow (i+2) else 0)))
-                 LowLevel.handleSuper t e
-            _ -> LowLevel.handleSuper t e
-        _ -> LowLevel.handleSuper t e
-    _ -> LowLevel.handleSuper t e
+                 LowLevel.handleTabsBase (safeCast t) e
+            _ -> LowLevel.handleTabsBase (safeCast t) e
+        _ -> LowLevel.handleTabsBase (safeCast t) e
+    _ -> LowLevel.handleTabsBase (safeCast t) e
 
 -- | Calculate the width and x coordinate of each tab
 lightTabPositionsCustom :: TabSpec -> Ref LowLevel.Tabs -> IO (Maybe AtIndex, Int, [(X,Width)])
@@ -279,7 +280,7 @@ lightTabPositionsCustom spec t = do
   let xOffsets = zip (map X (map ((+) x) (scanl (+) 0 widths))) (map Width widths)
   return (selected, (0 :: Int), xOffsets)
   where
-   selectedTab :: [(AtIndex, Ref LowLevel.Widget)] -> IO (Maybe AtIndex)
+   selectedTab :: [(AtIndex, Ref LowLevel.WidgetBase)] -> IO (Maybe AtIndex)
    selectedTab [] = return Nothing
    selectedTab ((i,w):ws) = do
      v <- LowLevel.getVisible w
@@ -333,7 +334,7 @@ tabBarRectangle spec t = do
       else toRectangle (tabsX,tabsY,tabsW,tabHeight))
 
 -- | Determine which tab was just selected
-lightTabWhichCustom :: TabSpec -> Ref LowLevel.Tabs -> Position -> IO (Maybe (AtIndex, Ref LowLevel.Widget))
+lightTabWhichCustom :: TabSpec -> Ref LowLevel.Tabs -> Position -> IO (Maybe (AtIndex, Ref LowLevel.WidgetBase))
 lightTabWhichCustom spec t pos = do
   tabBarRect <- tabBarRectangle spec t
   if (not (insideRectangle pos tabBarRect))

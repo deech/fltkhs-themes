@@ -6,6 +6,7 @@ module Graphics.UI.FLTK.Theme.Light.Tree
 where
 import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.LowLevel.Fl_Types
+import Graphics.UI.FLTK.LowLevel.Dispatch
 import Graphics.UI.FLTK.Theme.Light.Common
 import qualified Data.Text as T
 import qualified Graphics.UI.FLTK.LowLevel.FLTKHS as LowLevel
@@ -22,7 +23,7 @@ treeNew rectangle l' = do
           (\rect _ -> do
               LowLevel.flcRectfWithColor rect color
               LowLevel.flcRectWithColor rect slightlyDarker)
-          (LowLevel.drawSuper t)
+          (LowLevel.drawTreeBase (safeCast t))
   t <- LowLevel.treeCustom rectangle l' (Just customDraw) Nothing
   LowLevel.setBox t BorderBox
   LowLevel.setColor t lightBackground

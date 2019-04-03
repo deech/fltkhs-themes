@@ -17,7 +17,7 @@ import Graphics.UI.FLTK.LowLevel.Fl_Enumerations
 import Graphics.UI.FLTK.Theme.Light.Assets
 
 -- | The custom 'draw' function for creating the themed browser
-browserDraw :: Ref LowLevel.Browser -> IO ()
+browserDraw :: Ref LowLevel.BrowserBase -> IO ()
 browserDraw b = do
   (color :: Color) <- LowLevel.getColor b
   let slightlyDarker = colorAverage color blackColor 0.85
@@ -26,10 +26,10 @@ browserDraw b = do
     (\rect _ -> do
         LowLevel.flcRectfWithColor rect color
         LowLevel.flcRectWithColor rect slightlyDarker)
-    (LowLevel.drawSuper b)
+    (LowLevel.drawBrowserBase (safeCast b))
 
 -- | Setting the theme's color, fonts etc
-browserSetup :: (?assets :: Assets) => Ref LowLevel.Browser -> IO ()
+browserSetup :: (?assets :: Assets) => Ref LowLevel.BrowserBase -> IO ()
 browserSetup b = do
   LowLevel.setColor b lightBackground
   LowLevel.setBox b BorderBox
@@ -43,8 +43,8 @@ browserSetup b = do
 
 browserNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.Browser)
 browserNew rect l = do
-  b <- LowLevel.browserCustom rect l (Just browserDraw) Nothing
-  browserSetup b
+  b <- LowLevel.browserCustom rect l (Just (browserDraw . safeCast)) Nothing
+  browserSetup (safeCast b)
   return b
 
 selectBrowserNew :: (?assets :: Assets) => Rectangle -> Maybe T.Text -> IO (Ref LowLevel.SelectBrowser)
