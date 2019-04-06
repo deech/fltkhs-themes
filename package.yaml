@@ -1,5 +1,5 @@
 name:                fltkhs-themes
-version:             0.1.0.7
+version:             0.2.0.0
 github:              "deech/fltkhs-themes"
 license:             BSD3
 author:              "Aditya Siram"
@@ -27,7 +27,7 @@ library:
   dependencies:
     - base >= 4.7 && < 5
     - load-font >= 0.1.0.2
-    - fltkhs >= 0.7.0.4
+    - fltkhs >= 0.8.0.0
     - text >= 1.2.2.0
     - vector >= 0.12.0.1
     - bytestring
